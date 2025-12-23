@@ -1,0 +1,234 @@
+@import 'tailwindcss';
+
+/* earningsInsight Design System
+ * Color palette aligned with product design
+ */
+
+@theme {
+  /* Font families */
+  --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Gray scale - Dark navy/charcoal theme */
+  --color-gray-25: #F8FAFC;
+  --color-gray-50: #F1F5F9;
+  --color-gray-100: #E2E8F0;
+  --color-gray-200: #CBD5E1;
+  --color-gray-300: #94A3B8;
+  --color-gray-400: #64748B;
+  --color-gray-500: #475569;
+  --color-gray-600: #334155;
+  --color-gray-700: #1E293B;
+  --color-gray-800: #151D2B;
+  --color-gray-850: #111827;
+  --color-gray-900: #0D1219;
+  --color-gray-950: #080C11;
+
+  /* Primary (Teal/Green) - matching #20C099 */
+  --color-primary-25: #ECFDF5;
+  --color-primary-50: #D1FAE5;
+  --color-primary-100: #A7F3D0;
+  --color-primary-200: #6EE7B7;
+  --color-primary-300: #34D399;
+  --color-primary-400: #20C099;
+  --color-primary-500: #10B981;
+  --color-primary-600: #059669;
+  --color-primary-700: #047857;
+  --color-primary-800: #065F46;
+  --color-primary-850: #1A3A34;
+  --color-primary-900: #132D27;
+  --color-primary-950: #0D1F1A;
+
+  /* Error (Coral/Red) */
+  --color-error-25: #FFF1F2;
+  --color-error-50: #FFE4E6;
+  --color-error-100: #FECDD3;
+  --color-error-200: #FDA4AF;
+  --color-error-300: #FB7185;
+  --color-error-400: #F87171;
+  --color-error-500: #EF4444;
+  --color-error-600: #DC2626;
+  --color-error-700: #B91C1C;
+  --color-error-800: #991B1B;
+  --color-error-900: #7F1D1D;
+  --color-error-950: #450A0A;
+
+  /* Warning (Amber/Yellow) */
+  --color-warning-25: #FFFBEB;
+  --color-warning-50: #FEF3C7;
+  --color-warning-100: #FDE68A;
+  --color-warning-200: #FCD34D;
+  --color-warning-300: #FBBF24;
+  --color-warning-400: #F59E0B;
+  --color-warning-500: #D97706;
+  --color-warning-600: #B45309;
+  --color-warning-700: #92400E;
+  --color-warning-800: #78350F;
+  --color-warning-900: #451A03;
+  --color-warning-950: #2D1204;
+
+  /* Success (Green) */
+  --color-success-25: #F0FDF4;
+  --color-success-50: #DCFCE7;
+  --color-success-100: #BBF7D0;
+  --color-success-200: #86EFAC;
+  --color-success-300: #4ADE80;
+  --color-success-400: #22C55E;
+  --color-success-500: #16A34A;
+  --color-success-600: #15803D;
+  --color-success-700: #166534;
+  --color-success-800: #14532D;
+  --color-success-900: #052E16;
+  --color-success-950: #022C12;
+}
+
+/* Base styles */
+html {
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-gray-950 text-gray-100;
+  min-height: 100vh;
+}
+
+/* Dark mode is default */
+html.dark body {
+  @apply bg-gray-950 text-gray-100;
+}
+
+html.light body {
+  @apply bg-gray-25 text-gray-900;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-600;
+}
+
+/* Utility classes */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Card styles */
+.card {
+  @apply bg-gray-900 border border-gray-800 rounded-lg;
+}
+
+.card-dark {
+  @apply bg-gray-950 border border-gray-800 rounded-lg;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-primary-600 hover:bg-primary-500 text-white font-medium py-2 px-4 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-800 hover:bg-gray-700 text-gray-100 font-medium py-2 px-4 rounded-lg transition-colors border border-gray-700;
+}
+
+/* Input styles */
+.input {
+  @apply bg-gray-900 border border-gray-700 rounded-lg py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-primary-900 text-primary-400 border border-primary-700;
+}
+
+.badge-success {
+  @apply bg-success-900 text-success-400 border border-success-700;
+}
+
+.badge-warning {
+  @apply bg-warning-900 text-warning-400 border border-warning-700;
+}
+
+.badge-error {
+  @apply bg-error-900 text-error-400 border border-error-700;
+}
+
+/* Status indicator */
+.status-dot {
+  @apply w-2 h-2 rounded-full;
+}
+
+.status-connected {
+  @apply bg-success-500;
+  box-shadow: 0 0 8px rgba(45, 208, 169, 0.5);
+}
+
+.status-disconnected {
+  @apply bg-error-500;
+  box-shadow: 0 0 8px rgba(245, 12, 0, 0.5);
+}
+
+.status-connecting {
+  @apply bg-warning-500 animate-pulse;
+  box-shadow: 0 0 8px rgba(253, 199, 70, 0.5);
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(45, 208, 149, 0.15);
+}
+
+.glow-success {
+  box-shadow: 0 0 20px rgba(45, 208, 169, 0.15);
+}
+
+/* Animation */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(45, 208, 149, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(45, 208, 149, 0.6);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Sentiment color utilities */
+.sentiment-positive {
+  @apply text-primary-500;
+}
+
+.sentiment-negative {
+  @apply text-error-500;
+}
+
+.sentiment-neutral {
+  @apply text-gray-400;
+}

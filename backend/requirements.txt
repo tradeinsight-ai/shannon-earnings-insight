@@ -1,0 +1,24 @@
+# FastAPI and server
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.18
+
+# Environment and configuration
+python-dotenv==1.0.1
+
+# HTTP client for API calls
+httpx==0.28.1
+
+# AI integrations
+openai==1.57.4
+
+# WebSocket support
+python-socketio==5.12.0
+websockets==14.1
+
+# Data validation and serialization
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# Caching (optional, for later)
+# redis==5.2.1

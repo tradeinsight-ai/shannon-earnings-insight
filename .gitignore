@@ -1,0 +1,28 @@
+# Logs
+*.log
+backend.log
+frontend.log
+
+# Node
+node_modules/
+.svelte-kit/
+build/
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/.venv/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
