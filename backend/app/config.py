@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     
     # API Keys
     alpha_vantage_api_key: str
-    openai_api_key: str
+    #openai_api_key: str
     
     # Server
     host: str = "0.0.0.0"
@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     
     # Rate Limiting
-    alpha_vantage_rate_limit: int = 5  # requests per minute
+    alpha_vantage_rate_limit: int = 999  # requests per minute
     
     # Search Filtering
     filter_us_equities_only: bool = True  # Only return US-listed company stocks
