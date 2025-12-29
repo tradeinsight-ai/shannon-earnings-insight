@@ -12,6 +12,9 @@ httpx==0.28.1
 # AI integrations
 openai==1.57.4
 
+# Local transcription
+faster-whisper==1.0.3
+
 # WebSocket support
 python-socketio==5.12.0
 websockets==14.1

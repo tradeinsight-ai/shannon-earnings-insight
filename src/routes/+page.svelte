@@ -5,6 +5,7 @@
     import AudioPlayer from "$lib/components/AudioPlayer.svelte";
     import TranscriptViewer from "$lib/components/TranscriptViewer.svelte";
     import AnalysisDashboard from "$lib/components/AnalysisDashboard.svelte";
+    import MicrophoneControls from "$lib/components/MicrophoneControls.svelte";
     import { uiStore } from "$lib/stores/ui.svelte";
 </script>
 
@@ -28,6 +29,9 @@
             {#if uiStore.audioSource === 'custom'}
                 <AudioPlayer />
             {/if}
+
+            <!-- Microphone Controls -->
+            <MicrophoneControls />
 
             <!-- Bottom Section: Transcript + Analysis -->
             <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">

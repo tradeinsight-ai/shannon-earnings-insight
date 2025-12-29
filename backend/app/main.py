@@ -44,9 +44,18 @@ async def health():
 
 # Import and register routes
 from app.routes import companies, transcripts
+from app.websockets.transcription import handle_transcription_websocket
+from fastapi import WebSocket
 
 app.include_router(companies.router)
 app.include_router(transcripts.router)
+
+
+# WebSocket endpoint
+@app.websocket("/ws/transcribe")
+async def websocket_transcribe(websocket: WebSocket):
+    """WebSocket endpoint for real-time audio transcription"""
+    await handle_transcription_websocket(websocket)
 
 
 if __name__ == "__main__":
