@@ -12,6 +12,7 @@
   let wsConnected = $state(false);
   let error = $state<string | null>(null);
   let statusMessage = $state('Ready to record');
+  let transcriptCounter = 0;
   
   const transcriptionWs = createTranscriptionWebSocket(API_URL);
 
@@ -19,10 +20,9 @@
     // Setup transcription WebSocket callbacks
     transcriptionWs.onSegment((segment: TranscriptionSegment) => {
       if (segment.type === 'segment' && segment.text) {
-        // Add transcription to analysis store with unique ID
-        const entryId = `mic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        // Add transcription to analysis store with sequential ID
         analysisStore.addTranscriptEntry({
-          id: entryId,
+          id: `mic-${++transcriptCounter}`,
           speaker: 'Microphone',
           text: segment.text,
           timestamp: `${segment.start?.toFixed(1)}s - ${segment.end?.toFixed(1)}s`
