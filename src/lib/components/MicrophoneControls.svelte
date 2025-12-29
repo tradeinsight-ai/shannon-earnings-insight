@@ -19,8 +19,10 @@
     // Setup transcription WebSocket callbacks
     transcriptionWs.onSegment((segment: TranscriptionSegment) => {
       if (segment.type === 'segment' && segment.text) {
-        // Add transcription to analysis store
+        // Add transcription to analysis store with unique ID
+        const entryId = `mic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         analysisStore.addTranscriptEntry({
+          id: entryId,
           speaker: 'Microphone',
           text: segment.text,
           timestamp: `${segment.start?.toFixed(1)}s - ${segment.end?.toFixed(1)}s`
