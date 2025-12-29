@@ -86,15 +86,16 @@ class LocalWhisperService:
         Transcribe audio from bytes (for WebSocket streaming).
         
         Args:
-            audio_data: Raw audio bytes (WAV format expected)
+            audio_data: Raw audio bytes (WebM format from MediaRecorder)
             language: Language code (e.g., 'en'), None for auto-detect
             beam_size: Beam size for decoding
             
         Yields:
             Segment dictionaries with 'start', 'end', 'text' keys
         """
-        # Write audio data to temporary file
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+        # Write audio data to temporary file with correct extension
+        # MediaRecorder sends WebM/Opus format, not WAV
+        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp_file:
             tmp_file.write(audio_data)
             tmp_path = tmp_file.name
         
