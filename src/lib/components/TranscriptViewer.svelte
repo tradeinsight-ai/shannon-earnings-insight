@@ -38,6 +38,17 @@
     function formatTimestamp(timestamp: string): string {
         return timestamp;
     }
+
+    function highlightText(text: string, query: string): string {
+        if (!query) return text;
+        
+        // Escape special regex characters in query
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+        
+        // Replace matches with highlighted span
+        return text.replace(regex, '<mark class="bg-warning-500/30 text-warning-200 px-0.5 rounded">$1</mark>');
+    }
 </script>
 
 <div class="card flex flex-col h-full overflow-hidden">
@@ -95,13 +106,21 @@
                                     <span
                                         class="text-xs font-medium text-gray-400 block mb-0.5"
                                     >
-                                        {entry.speaker}
+                                        {#if searchQuery}
+                                            {@html highlightText(entry.speaker, searchQuery)}
+                                        {:else}
+                                            {entry.speaker}
+                                        {/if}
                                     </span>
                                 {/if}
                                 <p
                                     class="text-sm text-gray-200 leading-relaxed"
                                 >
-                                    {entry.text}
+                                    {#if searchQuery}
+                                        {@html highlightText(entry.text, searchQuery)}
+                                    {:else}
+                                        {entry.text}
+                                    {/if}
                                 </p>
                             </div>
                         </div>
