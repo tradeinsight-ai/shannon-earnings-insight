@@ -42,6 +42,9 @@
   });
 
   onDestroy(() => {
+    if (sendInterval !== null) {
+      clearInterval(sendInterval);
+    }
     if (isRecording) {
       stopRecording();
     }
@@ -62,6 +65,9 @@
     }
   }
 
+  let audioChunks: Blob[] = [];
+  let sendInterval: number | null = null;
+
   async function startRecording() {
     if (!isInitialized) {
       await initializeAudio();
@@ -73,12 +79,27 @@
       statusMessage = 'Connecting to transcription service...';
       await transcriptionWs.connect();
       
-      // Start recording and stream audio chunks
+      // Reset chunks
+      audioChunks = [];
+      
+      // Start recording and accumulate audio chunks
       statusMessage = 'Recording...';
       audioService.startRecording((chunk) => {
-        // Send each audio chunk to the WebSocket
-        transcriptionWs.sendAudio(chunk);
+        // Accumulate chunks
+        audioChunks.push(chunk);
       });
+      
+      // Send accumulated audio every 3 seconds
+      sendInterval = window.setInterval(() => {
+        if (audioChunks.length > 0) {
+          // Combine all accumulated chunks into one blob
+          const audioBlob = new Blob(audioChunks, { type: audioService.config.mimeType });
+          transcriptionWs.sendAudio(audioBlob);
+          
+          // Clear chunks after sending
+          audioChunks = [];
+        }
+      }, 3000);
       
       isRecording = true;
       error = null;
@@ -91,6 +112,22 @@
   async function stopRecording() {
     try {
       statusMessage = 'Stopping recording...';
+      
+      // Clear send interval
+      if (sendInterval !== null) {
+        clearInterval(sendInterval);
+        sendInterval = null;
+      }
+      
+      // Send any remaining chunks
+      if (audioChunks.length > 0) {
+        const audioBlob = new Blob(audioChunks, { type: audioService.config.mimeType });
+        transcriptionWs.sendAudio(audioBlob);
+        audioChunks = [];
+      }
+      
+      // Small delay to let final audio send
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Stop recording
       await audioService.stopRecording();
