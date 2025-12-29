@@ -42,9 +42,7 @@
   });
 
   onDestroy(() => {
-    if (sendInterval !== null) {
-      clearInterval(sendInterval);
-    }
+    isRecordingCycle = false;
     if (isRecording) {
       stopRecording();
     }
@@ -65,8 +63,8 @@
     }
   }
 
-  let audioChunks: Blob[] = [];
-  let sendInterval: number | null = null;
+  let recordingCycleInterval: number | null = null;
+  let isRecordingCycle = false;
 
   async function startRecording() {
     if (!isInitialized) {
@@ -79,33 +77,52 @@
       statusMessage = 'Connecting to transcription service...';
       await transcriptionWs.connect();
       
-      // Reset chunks
-      audioChunks = [];
-      
-      // Start recording and accumulate audio chunks
-      statusMessage = 'Recording...';
-      audioService.startRecording((chunk) => {
-        // Accumulate chunks
-        audioChunks.push(chunk);
-      });
-      
-      // Send accumulated audio every 3 seconds
-      sendInterval = window.setInterval(() => {
-        if (audioChunks.length > 0) {
-          // Combine all accumulated chunks into one blob
-          const audioBlob = new Blob(audioChunks, { type: audioService.config.mimeType });
-          transcriptionWs.sendAudio(audioBlob);
-          
-          // Clear chunks after sending
-          audioChunks = [];
-        }
-      }, 3000);
-      
       isRecording = true;
+      isRecordingCycle = true;
       error = null;
+      
+      // Start first recording cycle
+      await startRecordingCycle();
+      
     } catch (err) {
       error = 'Failed to start recording';
       console.error(err);
+      isRecording = false;
+      isRecordingCycle = false;
+    }
+  }
+
+  async function startRecordingCycle() {
+    if (!isRecordingCycle) return;
+    
+    try {
+      statusMessage = 'Recording...';
+      
+      // Start recording (without chunk callback - we want the complete file)
+      audioService.startRecording();
+      
+      // Stop after 5 seconds to get a complete, valid audio file
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      if (!isRecordingCycle) return; // User might have stopped during wait
+      
+      // Stop recording and get the complete audio blob
+      const audioBlob = await audioService.stopRecording();
+      
+      console.log(`Sending complete audio blob: ${(audioBlob.size / 1024).toFixed(2)} KB`);
+      
+      // Send the complete audio file for transcription
+      transcriptionWs.sendAudio(audioBlob);
+      
+      // Start next cycle
+      if (isRecordingCycle) {
+        await startRecordingCycle();
+      }
+    } catch (err) {
+      console.error('Recording cycle error:', err);
+      error = 'Recording failed';
+      isRecording = false;
+      isRecordingCycle = false;
     }
   }
 
@@ -113,26 +130,26 @@
     try {
       statusMessage = 'Stopping recording...';
       
-      // Clear send interval
-      if (sendInterval !== null) {
-        clearInterval(sendInterval);
-        sendInterval = null;
-      }
+      // Stop the recording cycle
+      isRecordingCycle = false;
       
-      // Send any remaining chunks
-      if (audioChunks.length > 0) {
-        const audioBlob = new Blob(audioChunks, { type: audioService.config.mimeType });
-        transcriptionWs.sendAudio(audioBlob);
-        audioChunks = [];
+      // If currently recording, stop it
+      if (audioService.getState() === 'recording') {
+        try {
+          const audioBlob = await audioService.stopRecording();
+          // Send final audio if it has content
+          if (audioBlob.size > 0) {
+            transcriptionWs.sendAudio(audioBlob);
+          }
+        } catch (err) {
+          console.log('Final audio collection error (expected):', err);
+        }
       }
       
       // Small delay to let final audio send
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Stop recording
-      await audioService.stopRecording();
-      
-      // Disconnect WebSocket (triggers final transcription)
+      // Disconnect WebSocket
       transcriptionWs.disconnect();
       
       isRecording = false;
