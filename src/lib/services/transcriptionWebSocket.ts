@@ -72,12 +72,16 @@ export class TranscriptionWebSocketService {
    */
   sendAudio(audioData: Blob | ArrayBuffer): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.error('[TranscriptionWS] Cannot send audio - not connected');
+      console.error('[TranscriptionWS] Cannot send audio - not connected. State:', this.ws?.readyState);
       return;
     }
 
+    const size = audioData instanceof Blob ? audioData.size : audioData.byteLength;
+    console.log(`[TranscriptionWS] Sending audio: ${(size / 1024).toFixed(2)} KB`);
+
     if (audioData instanceof Blob) {
       audioData.arrayBuffer().then(buffer => {
+        console.log(`[TranscriptionWS] Converted blob to buffer: ${(buffer.byteLength / 1024).toFixed(2)} KB`);
         this.ws?.send(buffer);
       });
     } else {

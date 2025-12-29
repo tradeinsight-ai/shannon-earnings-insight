@@ -93,37 +93,50 @@
   }
 
   async function startRecordingCycle() {
-    if (!isRecordingCycle) return;
-    
-    try {
-      statusMessage = 'Recording...';
-      
-      // Start recording (without chunk callback - we want the complete file)
-      audioService.startRecording();
-      
-      // Stop after 5 seconds to get a complete, valid audio file
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      
-      if (!isRecordingCycle) return; // User might have stopped during wait
-      
-      // Stop recording and get the complete audio blob
-      const audioBlob = await audioService.stopRecording();
-      
-      console.log(`Sending complete audio blob: ${(audioBlob.size / 1024).toFixed(2)} KB`);
-      
-      // Send the complete audio file for transcription
-      transcriptionWs.sendAudio(audioBlob);
-      
-      // Start next cycle
-      if (isRecordingCycle) {
-        await startRecordingCycle();
+    while (isRecordingCycle) {
+      try {
+        console.log('[RecordingCycle] Starting new 5-second recording...');
+        statusMessage = 'Recording...';
+        
+        // Start recording (without chunk callback - we want the complete file)
+        audioService.startRecording();
+        
+        // Stop after 5 seconds to get a complete, valid audio file
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        if (!isRecordingCycle) {
+          console.log('[RecordingCycle] Cycle stopped by user');
+          break;
+        }
+        
+        console.log('[RecordingCycle] Stopping recording to get complete blob...');
+        
+        // Stop recording and get the complete audio blob
+        const audioBlob = await audioService.stopRecording();
+        
+        console.log(`[RecordingCycle] Got blob: ${(audioBlob.size / 1024).toFixed(2)} KB`);
+        
+        // Send the complete audio file for transcription
+        if (audioBlob.size > 0) {
+          console.log('[RecordingCycle] Sending audio to WebSocket...');
+          transcriptionWs.sendAudio(audioBlob);
+        } else {
+          console.warn('[RecordingCycle] Empty audio blob, skipping send');
+        }
+        
+        // Small delay before starting next cycle
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+      } catch (err) {
+        console.error('[RecordingCycle] Error in cycle:', err);
+        error = 'Recording failed: ' + err.message;
+        isRecording = false;
+        isRecordingCycle = false;
+        break;
       }
-    } catch (err) {
-      console.error('Recording cycle error:', err);
-      error = 'Recording failed';
-      isRecording = false;
-      isRecordingCycle = false;
     }
+    
+    console.log('[RecordingCycle] Recording cycle ended');
   }
 
   async function stopRecording() {
