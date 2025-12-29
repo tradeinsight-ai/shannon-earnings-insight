@@ -70,13 +70,20 @@ export class AudioRecordingService {
     }
 
     if (this.mediaRecorder?.state === 'recording') {
-      console.warn('Already recording');
+      console.warn('[AudioService] Already recording');
       return;
+    }
+
+    // Clean up any previous recorder
+    if (this.mediaRecorder) {
+      console.log('[AudioService] Cleaning up previous MediaRecorder');
+      this.mediaRecorder = null;
     }
 
     this.audioChunks = [];
 
     try {
+      console.log('[AudioService] Creating new MediaRecorder');
       this.mediaRecorder = new MediaRecorder(this.stream, {
         mimeType: this.config.mimeType
       });
@@ -91,9 +98,9 @@ export class AudioRecordingService {
 
       // Start recording with 1-second chunks
       this.mediaRecorder.start(1000);
-      console.log('Recording started');
+      console.log('[AudioService] Recording started');
     } catch (error) {
-      console.error('Failed to start recording:', error);
+      console.error('[AudioService] Failed to start recording:', error);
       throw new Error('Failed to start audio recording');
     }
   }
@@ -115,7 +122,11 @@ export class AudioRecordingService {
 
       this.mediaRecorder.onstop = () => {
         const audioBlob = new Blob(this.audioChunks, { type: this.config.mimeType });
-        console.log(`Recording stopped. Size: ${(audioBlob.size / 1024).toFixed(2)} KB`);
+        console.log(`[AudioService] Recording stopped. Size: ${(audioBlob.size / 1024).toFixed(2)} KB`);
+        
+        // Clean up the mediaRecorder for next cycle
+        this.mediaRecorder = null;
+        
         resolve(audioBlob);
       };
 
