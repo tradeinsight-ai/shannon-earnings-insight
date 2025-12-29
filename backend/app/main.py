@@ -38,7 +38,7 @@ async def health():
     return {
         "status": "healthy",
         "alpha_vantage": "configured" if settings.alpha_vantage_api_key else "missing",
-        "openai": "configured" if settings.openai_api_key else "missing"
+        "transcription": "local (faster-whisper)"
     }
 
 
