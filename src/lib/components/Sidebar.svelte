@@ -318,16 +318,20 @@
             </div>
         {:else}
             {#each companyStore.companies as company}
-                {#each company.earningsCalls.slice(0, 1) as call}
+                {@const isSelectedCompany = companyStore.selectedTicker === company.ticker}
+                {@const displayCall = isSelectedCompany && companyStore.selectedEarningsCall
+                    ? companyStore.selectedEarningsCall
+                    : company.earningsCalls[0]}
+                {#if displayCall}
                     <button
                         type="button"
                         class="w-full p-3 text-left border-b border-gray-800/30 hover:bg-gray-800/50 transition-colors
-                {companyStore.selectedEarningsCall?.id === call.id
+                {companyStore.selectedEarningsCall?.id === displayCall.id
                             ? 'bg-gray-800/70'
                             : ''}"
                         onclick={() => {
                             companyStore.selectCompany(company.ticker);
-                            companyStore.selectEarningsCall(call.id);
+                            companyStore.selectEarningsCall(displayCall.id);
                         }}
                     >
                         <div class="flex items-center justify-between mb-1">
@@ -335,14 +339,14 @@
                                 >{company.ticker}</span
                             >
                             <span class="badge badge-primary text-[10px]"
-                                >{call.quarter} {call.year}</span
+                                >{displayCall.quarter} {displayCall.year}</span
                             >
                         </div>
                         <div class="text-xs text-gray-500">
-                            <span>{formatDateShort(call.date)}</span>
+                            <span>{formatDateShort(displayCall.date)}</span>
                         </div>
                     </button>
-                {/each}
+                {/if}
             {/each}
         {/if}
     </div>

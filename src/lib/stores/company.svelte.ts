@@ -186,28 +186,53 @@ export async function selectEarningsCall(callId: string | null) {
         return;
     }
     
-    // Fetch quarter-specific financial data from API
+    // Fetch quarter-specific financial data and transcript from API
     try {
         isLoadingFinancials = true;
         loadingError = null;
         
-        const financials = await api.getFinancials(
-            selectedCompany.ticker,
-            call.quarter,
-            call.year
-        ).catch((err) => {
-            console.warn(`No financial data for ${selectedCompany.ticker} ${call.quarter} ${call.year}:`, err);
-            return null;
-        });
+        // Load financials and transcript in parallel
+        const [financials, transcript] = await Promise.all([
+            api.getFinancials(
+                selectedCompany.ticker,
+                call.quarter,
+                call.year
+            ).catch((err) => {
+                console.warn(`No financial data for ${selectedCompany.ticker} ${call.quarter} ${call.year}:`, err);
+                return null;
+            }),
+            api.getTranscript(
+                selectedCompany.ticker,
+                call.quarter,
+                call.year
+            ).catch((err) => {
+                console.warn(`No transcript for ${selectedCompany.ticker} ${call.quarter} ${call.year}:`, err);
+                return null;
+            })
+        ]);
         
         financialsData = financials;
+        
+        // Update analysis store with transcript if available
+        if (transcript && transcript.entries) {
+            const { analysisStore } = await import('./analysis.svelte');
+            analysisStore.setTranscript(transcript.entries);
+            console.log(`Loaded ${transcript.entries.length} transcript entries`);
+        }
         
         if (!financials) {
             loadingError = `Financial data not available for ${call.quarter} ${call.year}`;
         }
+        if (!transcript) {
+            if (loadingError) {
+                loadingError += ` and transcript not available`;
+            } else {
+                loadingError = `Transcript not available for ${call.quarter} ${call.year}`;
+            }
+        }
     } catch (error) {
-        console.error('Error loading quarter financials:', error);
-        loadingError = error instanceof Error ? error.message : 'Failed to load financial data';
+        console.error('Error loading quarter data:', error);
+        loadingError = error instanceof Error ? error.message : 'Failed to load data';
     } finally {
         isLoadingFinancials = false;
     }
