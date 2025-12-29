@@ -18,7 +18,7 @@
 
 <div class="card flex flex-col h-full overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-800">
+    <div class="flex items-center justify-between p-4 border-b border-gray-800 shrink-0">
         <div class="flex items-center gap-2">
             <Sparkles class="w-4 h-4 text-warning-400" />
             <span class="text-sm font-medium text-gray-200">AI Analysis</span>
@@ -43,7 +43,7 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         <!-- Sentiment Chart -->
         <SentimentChart />
 

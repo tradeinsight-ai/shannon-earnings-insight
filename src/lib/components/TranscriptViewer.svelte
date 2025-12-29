@@ -40,9 +40,9 @@
     }
 </script>
 
-<div class="card flex flex-col h-full">
+<div class="card flex flex-col h-full overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-800">
+    <div class="flex items-center justify-between p-4 border-b border-gray-800 shrink-0">
         <div
             class="flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider"
         >
@@ -68,7 +68,7 @@
     <div
         bind:this={transcriptContainer}
         onscroll={handleScroll}
-        class="flex-1 overflow-y-auto p-4"
+        class="flex-1 overflow-y-auto p-4 min-h-0"
     >
         {#if analysisStore.transcript.length === 0}
             <div
