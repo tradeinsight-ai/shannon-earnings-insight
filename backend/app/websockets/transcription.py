@@ -15,14 +15,18 @@ async def handle_transcription_websocket(websocket: WebSocket):
     Handle WebSocket connection for audio transcription.
     
     Protocol:
-    - Client sends: complete WebM audio blobs (accumulated 3-second chunks)
-    - Server responds: JSON with transcription segments
+    - Client sends: JSON metadata with timeOffsetSeconds, then binary audio data
+    - Server responds: JSON with transcription segments (timestamps adjusted by offset)
+    
+    Message format (client -> server):
+    1. JSON: {"type": "metadata", "timeOffsetSeconds": 5.0}
+    2. Binary: WebM audio blob
     
     Message format (server -> client):
     {
         "type": "segment",
-        "start": 0.0,
-        "end": 2.5,
+        "start": 5.0,
+        "end": 7.5,
         "text": "Transcribed text"
     }
     OR
@@ -35,26 +39,43 @@ async def handle_transcription_websocket(websocket: WebSocket):
     logger.info("Transcription WebSocket connected")
     
     whisper_service = get_whisper_service(model_size=settings.whisper_model_size)
+    time_offset = 0.0  # Default offset
     
     try:
         while True:
-            # Receive complete audio blob from client
-            audio_data = await websocket.receive_bytes()
+            # First, try to receive metadata (JSON)
+            try:
+                message = await websocket.receive_text()
+                metadata = json.loads(message)
+                if metadata.get("type") == "metadata":
+                    time_offset = metadata.get("timeOffsetSeconds", 0.0)
+                    logger.info(f"Received metadata: time_offset={time_offset}s")
+                    # Now receive the audio data
+                    audio_data = await websocket.receive_bytes()
+                else:
+                    logger.warning(f"Unexpected message type: {metadata.get('type')}")
+                    continue
+            except json.JSONDecodeError:
+                # If not JSON, might be old protocol with just audio
+                logger.warning("Received non-JSON message, assuming binary audio")
+                audio_data = await websocket.receive_bytes()
+                time_offset = 0.0
             
             # Skip if empty
             if len(audio_data) == 0:
                 continue
             
-            logger.info(f"Received audio blob: {len(audio_data)} bytes")
+            logger.info(f"Received audio blob: {len(audio_data)} bytes, offset: {time_offset}s")
             
             try:
-                # Transcribe the audio blob (each blob is a complete WebM file)
+                # Transcribe the audio blob with time offset
                 segment_count = 0
                 for segment in whisper_service.transcribe_stream(
                     audio_data,
-                    language="en"
+                    language="en",
+                    time_offset=time_offset
                 ):
-                    # Send each segment back to client
+                    # Send each segment back to client (timestamps already adjusted)
                     await websocket.send_json({
                         "type": "segment",
                         "start": segment["start"],
