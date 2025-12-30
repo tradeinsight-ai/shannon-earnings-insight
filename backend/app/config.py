@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     
     # API Keys
     alpha_vantage_api_key: str
-    #openai_api_key: str
     
     # Server
     host: str = "0.0.0.0"
@@ -25,7 +24,7 @@ class Settings(BaseSettings):
     
     # Whisper Transcription
     whisper_model_size: str = "base"  # tiny, base, small, medium, large-v2, large-v3
-    whisper_chunk_duration_ms: int = 5000  # Recording chunk duration in milliseconds
+    whisper_chunk_duration_ms: int = 3000  # Recording chunk duration in milliseconds
     
     class Config:
         env_file = ".env"
