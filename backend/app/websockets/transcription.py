@@ -3,9 +3,11 @@
 import logging
 from fastapi import WebSocket, WebSocketDisconnect
 from app.services.local_whisper import get_whisper_service
+from app.config import get_settings
 import json
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 
 async def handle_transcription_websocket(websocket: WebSocket):
@@ -32,7 +34,7 @@ async def handle_transcription_websocket(websocket: WebSocket):
     await websocket.accept()
     logger.info("Transcription WebSocket connected")
     
-    whisper_service = get_whisper_service()
+    whisper_service = get_whisper_service(model_size=settings.whisper_model_size)
     
     try:
         while True:

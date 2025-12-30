@@ -42,6 +42,15 @@ async def health():
     }
 
 
+@app.get("/config/transcription")
+async def get_transcription_config():
+    """Get transcription configuration"""
+    return {
+        "whisper_model_size": settings.whisper_model_size,
+        "chunk_duration_ms": settings.whisper_chunk_duration_ms
+    }
+
+
 # Import and register routes
 from app.routes import companies, transcripts
 from app.websockets.transcription import handle_transcription_websocket

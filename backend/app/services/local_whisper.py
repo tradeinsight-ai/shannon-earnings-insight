@@ -112,9 +112,9 @@ class LocalWhisperService:
 _whisper_service: Optional[LocalWhisperService] = None
 
 
-def get_whisper_service() -> LocalWhisperService:
+def get_whisper_service(model_size: str = "base") -> LocalWhisperService:
     """Get or create the global Whisper service instance."""
     global _whisper_service
     if _whisper_service is None:
-        _whisper_service = LocalWhisperService()
+        _whisper_service = LocalWhisperService(model_size=model_size)
     return _whisper_service

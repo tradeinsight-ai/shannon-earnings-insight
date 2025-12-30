@@ -13,10 +13,23 @@
   let error = $state<string | null>(null);
   let statusMessage = $state('Ready to record');
   let transcriptCounter = 0;
+  let chunkDurationMs = $state(5000); // Default, will be loaded from config
   
   const transcriptionWs = createTranscriptionWebSocket(API_URL);
 
-  onMount(() => {
+  onMount(async () => {
+    // Load transcription config from backend
+    try {
+      const response = await fetch(`${API_URL}/config/transcription`);
+      if (response.ok) {
+        const config = await response.json();
+        chunkDurationMs = config.chunk_duration_ms;
+        console.log(`[Config] Chunk duration: ${chunkDurationMs}ms, Model: ${config.whisper_model_size}`);
+      }
+    } catch (err) {
+      console.warn('[Config] Failed to load config, using default:', err);
+    }
+    
     // Setup transcription WebSocket callbacks
     transcriptionWs.onSegment((segment: TranscriptionSegment) => {
       if (segment.type === 'segment' && segment.text) {
@@ -97,14 +110,14 @@
   async function startRecordingCycle() {
     while (isRecordingCycle) {
       try {
-        console.log('[RecordingCycle] Starting new 5-second recording...');
+        console.log(`[RecordingCycle] Starting new ${chunkDurationMs}ms recording...`);
         statusMessage = 'Recording...';
         
         // Start recording (without chunk callback - we want the complete file)
         audioService.startRecording();
         
-        // Stop after 5 seconds to get a complete, valid audio file
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // Stop after configured duration to get a complete, valid audio file
+        await new Promise(resolve => setTimeout(resolve, chunkDurationMs));
         
         if (!isRecordingCycle) {
           console.log('[RecordingCycle] Cycle stopped by user');
