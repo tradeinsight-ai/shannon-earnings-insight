@@ -69,21 +69,29 @@ export class TranscriptionWebSocketService {
   /**
    * Send audio data to the server for transcription.
    * @param audioData Audio blob or array buffer
+   * @param timeOffsetSeconds Cumulative time offset in seconds for timestamp adjustment
    */
-  sendAudio(audioData: Blob | ArrayBuffer): void {
+  async sendAudio(audioData: Blob | ArrayBuffer, timeOffsetSeconds: number = 0): Promise<void> {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.error('[TranscriptionWS] Cannot send audio - not connected. State:', this.ws?.readyState);
       return;
     }
 
     const size = audioData instanceof Blob ? audioData.size : audioData.byteLength;
-    console.log(`[TranscriptionWS] Sending audio: ${(size / 1024).toFixed(2)} KB`);
+    console.log(`[TranscriptionWS] Sending audio: ${(size / 1024).toFixed(2)} KB with offset ${timeOffsetSeconds}s`);
 
+    // Send metadata first
+    const metadata = {
+      type: 'metadata',
+      timeOffsetSeconds: timeOffsetSeconds
+    };
+    this.ws.send(JSON.stringify(metadata));
+
+    // Convert to ArrayBuffer if needed and send audio data
     if (audioData instanceof Blob) {
-      audioData.arrayBuffer().then(buffer => {
-        console.log(`[TranscriptionWS] Converted blob to buffer: ${(buffer.byteLength / 1024).toFixed(2)} KB`);
-        this.ws?.send(buffer);
-      });
+      const buffer = await audioData.arrayBuffer();
+      console.log(`[TranscriptionWS] Converted blob to buffer: ${(buffer.byteLength / 1024).toFixed(2)} KB`);
+      this.ws.send(buffer);
     } else {
       this.ws.send(audioData);
     }

@@ -97,7 +97,7 @@
                     <div class="group">
                         <div class="flex items-start gap-3">
                             <span
-                                class="text-[10px] font-mono text-primary-600 bg-primary-900/30 px-1.5 py-0.5 rounded shrink-0 mt-0.5"
+                                class="text-[10px] font-mono text-primary-600 bg-primary-900/30 px-1.5 py-0.5 rounded shrink-0 mt-0.5 w-[7rem] text-center"
                             >
                                 {formatTimestamp(entry.timestamp)}
                             </span>

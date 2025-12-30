@@ -80,6 +80,7 @@
 
   let recordingCycleInterval: number | null = null;
   let isRecordingCycle = false;
+  let cumulativeTimeSeconds = 0; // Track total recording time for timestamp offsets
 
   async function startRecording() {
     if (!isInitialized) {
@@ -94,6 +95,7 @@
       
       isRecording = true;
       isRecordingCycle = true;
+      cumulativeTimeSeconds = 0; // Reset cumulative time on new recording session
       error = null;
       
       // Start first recording cycle
@@ -131,10 +133,13 @@
         
         console.log(`[RecordingCycle] Got blob: ${(audioBlob.size / 1024).toFixed(2)} KB`);
         
-        // Send the complete audio file for transcription
+        // Send the complete audio file for transcription with time offset
         if (audioBlob.size > 0) {
-          console.log('[RecordingCycle] Sending audio to WebSocket...');
-          transcriptionWs.sendAudio(audioBlob);
+          console.log(`[RecordingCycle] Sending audio to WebSocket with offset ${cumulativeTimeSeconds}s...`);
+          transcriptionWs.sendAudio(audioBlob, cumulativeTimeSeconds);
+          
+          // Update cumulative time after sending
+          cumulativeTimeSeconds += chunkDurationMs / 1000;
         } else {
           console.warn('[RecordingCycle] Empty audio blob, skipping send');
         }
