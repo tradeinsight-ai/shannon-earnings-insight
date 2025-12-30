@@ -198,28 +198,28 @@
   }
 </script>
 
-<div class="microphone-controls card p-4">
+<div class="card p-4">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-lg font-semibold">Live Transcription</h3>
+    <h3 class="text-lg font-semibold text-gray-100">Live Transcription</h3>
     <div class="flex items-center gap-2">
       {#if wsConnected}
-        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-        <span class="text-sm text-gray-600">Connected</span>
+        <span class="w-2 h-2 bg-primary-500 rounded-full"></span>
+        <span class="text-sm text-gray-400">Connected</span>
       {:else}
-        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-        <span class="text-sm text-gray-600">Disconnected</span>
+        <span class="w-2 h-2 bg-gray-600 rounded-full"></span>
+        <span class="text-sm text-gray-500">Disconnected</span>
       {/if}
     </div>
   </div>
 
-  <div class="status-message mb-4 p-3 bg-gray-50 rounded-lg">
-    <p class="text-sm text-gray-700">{statusMessage}</p>
+  <div class="mb-4 p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg">
+    <p class="text-sm text-gray-300">{statusMessage}</p>
   </div>
 
   {#if error}
-    <div class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start justify-between">
-      <p class="text-sm text-red-600">{error}</p>
-      <button onclick={clearError} class="text-red-400 hover:text-red-600">
+    <div class="mb-4 p-3 bg-error-900/30 border border-error-700/50 rounded-lg flex items-start justify-between">
+      <p class="text-sm text-error-400">{error}</p>
+      <button onclick={clearError} class="text-error-500 hover:text-error-400">
         <Square class="w-4 h-4" />
       </button>
     </div>
@@ -256,19 +256,13 @@
     {/if}
   </div>
 
-  <div class="help-text mt-4 text-xs text-gray-500">
+  <div class="mt-4 text-xs text-gray-500">
     <p>Record audio from your microphone and see real-time transcription.</p>
     <p>Transcribed text will appear in the transcript viewer below.</p>
   </div>
 </div>
 
 <style>
-  .microphone-controls {
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
   .btn {
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
@@ -302,11 +296,11 @@
   }
 
   .btn-secondary {
-    background: #e5e7eb;
-    color: #374151;
+    background: #6b7280;
+    color: #e5e7eb;
   }
 
   .btn-secondary:hover {
-    background: #d1d5db;
+    background: #4b5563;
   }
 </style>
