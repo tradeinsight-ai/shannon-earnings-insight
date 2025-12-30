@@ -40,7 +40,6 @@
           text: segment.text,
           timestamp: `${segment.start?.toFixed(1)}s - ${segment.end?.toFixed(1)}s`
         });
-        statusMessage = `Transcribed: ${segment.text.substring(0, 50)}...`;
       } else if (segment.type === 'error') {
         error = segment.message || 'Transcription error';
         stopRecording();
@@ -61,7 +60,7 @@
     if (isRecording) {
       stopRecording();
     }
-    audioService.dispose();
+    disposeAudio();
     transcriptionWs.disconnect();
   });
 
@@ -70,12 +69,16 @@
       statusMessage = 'Requesting microphone access...';
       await audioService.initialize();
       isInitialized = true;
-      statusMessage = 'Microphone ready';
       error = null;
     } catch (err) {
       error = 'Failed to access microphone. Please grant permission.';
       console.error(err);
     }
+  }
+
+  function disposeAudio() {
+    audioService.dispose();
+    isInitialized = false;
   }
 
   let recordingCycleInterval: number | null = null;
@@ -200,20 +203,21 @@
 
 <div class="card p-4">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-lg font-semibold text-gray-100">Live Transcription</h3>
-    <div class="flex items-center gap-2">
-      {#if wsConnected}
-        <span class="w-2 h-2 bg-primary-500 rounded-full"></span>
-        <span class="text-sm text-gray-400">Connected</span>
-      {:else}
-        <span class="w-2 h-2 bg-gray-600 rounded-full"></span>
-        <span class="text-sm text-gray-500">Disconnected</span>
-      {/if}
+    <div
+      class="flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider"
+    >
+      <Mic class="w-3.5 h-3.5" />
+      <span>Microphone</span>
     </div>
-  </div>
-
-  <div class="mb-4 p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg">
-    <p class="text-sm text-gray-300">{statusMessage}</p>
+    <span class="text-xs text-gray-500 font-mono">
+      {#if isRecording}
+        RECORDING
+      {:else if wsConnected}
+        CONNECTED
+      {:else}
+        READY
+      {/if}
+    </span>
   </div>
 
   {#if error}
@@ -225,82 +229,30 @@
     </div>
   {/if}
 
-  <div class="controls flex gap-3">
-    {#if !isRecording}
-      <button
-        onclick={startRecording}
-        class="btn btn-primary flex items-center gap-2 flex-1"
-        disabled={isRecording}
-      >
-        <Mic class="w-5 h-5" />
-        Start Recording
-      </button>
-    {:else}
-      <button
-        onclick={stopRecording}
-        class="btn btn-danger flex items-center gap-2 flex-1"
-      >
-        <Square class="w-5 h-5" />
-        Stop Recording
-      </button>
-    {/if}
-
-    {#if isInitialized && !isRecording}
-      <button
-        onclick={() => audioService.dispose()}
-        class="btn btn-secondary"
-        title="Release microphone"
-      >
-        <MicOff class="w-5 h-5" />
-      </button>
-    {/if}
-  </div>
-
-  <div class="mt-4 text-xs text-gray-500">
-    <p>Record audio from your microphone and see real-time transcription.</p>
-    <p>Transcribed text will appear in the transcript viewer below.</p>
+  <!-- Controls -->
+  <div class="flex flex-col items-center gap-4">
+    <div class="flex items-center gap-4">
+      {#if !isRecording}
+        <button
+          onclick={startRecording}
+          class="w-14 h-14 rounded-full flex items-center justify-center transition-all bg-primary-600 hover:bg-primary-500 text-white glow-primary"
+        >
+          <Mic class="w-6 h-6" />
+        </button>
+      {:else}
+        <button
+          onclick={stopRecording}
+          class="w-14 h-14 rounded-full flex items-center justify-center transition-all bg-error-600 hover:bg-error-500 text-white"
+        >
+          <Square class="w-6 h-6" />
+        </button>
+      {/if}
+    </div>
   </div>
 </div>
 
 <style>
-  .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-primary {
-    background: #3b82f6;
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #2563eb;
-  }
-
-  .btn-danger {
-    background: #ef4444;
-    color: white;
-  }
-
-  .btn-danger:hover {
-    background: #dc2626;
-  }
-
-  .btn-secondary {
-    background: #6b7280;
-    color: #e5e7eb;
-  }
-
-  .btn-secondary:hover {
-    background: #4b5563;
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
   }
 </style>
