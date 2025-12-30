@@ -43,7 +43,8 @@ class LocalWhisperService:
         self,
         audio_path: str,
         language: Optional[str] = None,
-        beam_size: int = 5
+        beam_size: int = 5,
+        time_offset: float = 0.0
     ) -> Iterator[dict]:
         """
         Transcribe an audio file.
@@ -52,13 +53,14 @@ class LocalWhisperService:
             audio_path: Path to audio file
             language: Language code (e.g., 'en'), None for auto-detect
             beam_size: Beam size for decoding (higher = more accurate but slower)
+            time_offset: Time offset in seconds to add to all timestamps (for cumulative timing)
             
         Yields:
-            Segment dictionaries with 'start', 'end', 'text' keys
+            Segment dictionaries with 'start', 'end', 'text' keys (timestamps include offset)
         """
         model = self._ensure_model_loaded()
         
-        logger.info(f"Transcribing file: {audio_path}")
+        logger.info(f"Transcribing file: {audio_path} (offset: {time_offset}s)")
         segments, info = model.transcribe(
             audio_path,
             language=language,
@@ -71,8 +73,8 @@ class LocalWhisperService:
         
         for segment in segments:
             yield {
-                "start": segment.start,
-                "end": segment.end,
+                "start": segment.start + time_offset,
+                "end": segment.end + time_offset,
                 "text": segment.text.strip()
             }
 
@@ -80,7 +82,8 @@ class LocalWhisperService:
         self,
         audio_data: bytes,
         language: Optional[str] = None,
-        beam_size: int = 5
+        beam_size: int = 5,
+        time_offset: float = 0.0
     ) -> Iterator[dict]:
         """
         Transcribe audio from bytes (for WebSocket streaming).
@@ -89,9 +92,10 @@ class LocalWhisperService:
             audio_data: Raw audio bytes (WebM format from MediaRecorder)
             language: Language code (e.g., 'en'), None for auto-detect
             beam_size: Beam size for decoding
+            time_offset: Time offset in seconds to add to all timestamps (for cumulative timing)
             
         Yields:
-            Segment dictionaries with 'start', 'end', 'text' keys
+            Segment dictionaries with 'start', 'end', 'text' keys (timestamps include offset)
         """
         # Write audio data to temporary file with correct extension
         # MediaRecorder sends WebM/Opus format, not WAV
@@ -100,8 +104,8 @@ class LocalWhisperService:
             tmp_path = tmp_file.name
         
         try:
-            # Transcribe the temporary file
-            for segment in self.transcribe_file(tmp_path, language, beam_size):
+            # Transcribe the temporary file with time offset
+            for segment in self.transcribe_file(tmp_path, language, beam_size, time_offset):
                 yield segment
         finally:
             # Clean up temporary file
