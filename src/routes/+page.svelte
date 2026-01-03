@@ -30,8 +30,10 @@
                 <AudioPlayer />
             {/if}
 
-            <!-- Microphone Controls -->
-            <MicrophoneControls />
+            <!-- Microphone Controls (only for microphone source) -->
+            {#if uiStore.audioSource === 'microphone'}
+                <MicrophoneControls />
+            {/if}
 
             <!-- Bottom Section: Transcript + Analysis -->
             <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">

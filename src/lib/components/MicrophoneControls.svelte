@@ -40,7 +40,6 @@
           text: segment.text,
           timestamp: `${segment.start?.toFixed(1)}s - ${segment.end?.toFixed(1)}s`
         });
-        statusMessage = `Transcribed: ${segment.text.substring(0, 50)}...`;
       } else if (segment.type === 'error') {
         error = segment.message || 'Transcription error';
         stopRecording();
@@ -61,7 +60,7 @@
     if (isRecording) {
       stopRecording();
     }
-    audioService.dispose();
+    disposeAudio();
     transcriptionWs.disconnect();
   });
 
@@ -70,7 +69,6 @@
       statusMessage = 'Requesting microphone access...';
       await audioService.initialize();
       isInitialized = true;
-      statusMessage = 'Microphone ready';
       error = null;
     } catch (err) {
       error = 'Failed to access microphone. Please grant permission.';
@@ -78,8 +76,14 @@
     }
   }
 
+  function disposeAudio() {
+    audioService.dispose();
+    isInitialized = false;
+  }
+
   let recordingCycleInterval: number | null = null;
   let isRecordingCycle = false;
+  let cumulativeTimeSeconds = 0; // Track total recording time for timestamp offsets
 
   async function startRecording() {
     if (!isInitialized) {
@@ -94,6 +98,7 @@
       
       isRecording = true;
       isRecordingCycle = true;
+      cumulativeTimeSeconds = 0; // Reset cumulative time on new recording session
       error = null;
       
       // Start first recording cycle
@@ -131,10 +136,13 @@
         
         console.log(`[RecordingCycle] Got blob: ${(audioBlob.size / 1024).toFixed(2)} KB`);
         
-        // Send the complete audio file for transcription
+        // Send the complete audio file for transcription with time offset
         if (audioBlob.size > 0) {
-          console.log('[RecordingCycle] Sending audio to WebSocket...');
-          transcriptionWs.sendAudio(audioBlob);
+          console.log(`[RecordingCycle] Sending audio to WebSocket with offset ${cumulativeTimeSeconds}s...`);
+          transcriptionWs.sendAudio(audioBlob, cumulativeTimeSeconds);
+          
+          // Update cumulative time after sending
+          cumulativeTimeSeconds += chunkDurationMs / 1000;
         } else {
           console.warn('[RecordingCycle] Empty audio blob, skipping send');
         }
@@ -193,115 +201,58 @@
   }
 </script>
 
-<div class="microphone-controls card p-4">
+<div class="card p-4">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-lg font-semibold">Live Transcription</h3>
-    <div class="flex items-center gap-2">
-      {#if wsConnected}
-        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-        <span class="text-sm text-gray-600">Connected</span>
-      {:else}
-        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-        <span class="text-sm text-gray-600">Disconnected</span>
-      {/if}
+    <div
+      class="flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider"
+    >
+      <Mic class="w-3.5 h-3.5" />
+      <span>Microphone</span>
     </div>
-  </div>
-
-  <div class="status-message mb-4 p-3 bg-gray-50 rounded-lg">
-    <p class="text-sm text-gray-700">{statusMessage}</p>
+    <span class="text-xs text-gray-500 font-mono">
+      {#if isRecording}
+        RECORDING
+      {:else if wsConnected}
+        CONNECTED
+      {:else}
+        READY
+      {/if}
+    </span>
   </div>
 
   {#if error}
-    <div class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start justify-between">
-      <p class="text-sm text-red-600">{error}</p>
-      <button onclick={clearError} class="text-red-400 hover:text-red-600">
+    <div class="mb-4 p-3 bg-error-900/30 border border-error-700/50 rounded-lg flex items-start justify-between">
+      <p class="text-sm text-error-400">{error}</p>
+      <button onclick={clearError} class="text-error-500 hover:text-error-400">
         <Square class="w-4 h-4" />
       </button>
     </div>
   {/if}
 
-  <div class="controls flex gap-3">
-    {#if !isRecording}
-      <button
-        onclick={startRecording}
-        class="btn btn-primary flex items-center gap-2 flex-1"
-        disabled={isRecording}
-      >
-        <Mic class="w-5 h-5" />
-        Start Recording
-      </button>
-    {:else}
-      <button
-        onclick={stopRecording}
-        class="btn btn-danger flex items-center gap-2 flex-1"
-      >
-        <Square class="w-5 h-5" />
-        Stop Recording
-      </button>
-    {/if}
-
-    {#if isInitialized && !isRecording}
-      <button
-        onclick={() => audioService.dispose()}
-        class="btn btn-secondary"
-        title="Release microphone"
-      >
-        <MicOff class="w-5 h-5" />
-      </button>
-    {/if}
-  </div>
-
-  <div class="help-text mt-4 text-xs text-gray-500">
-    <p>Record audio from your microphone and see real-time transcription.</p>
-    <p>Transcribed text will appear in the transcript viewer below.</p>
+  <!-- Controls -->
+  <div class="flex flex-col items-center gap-4">
+    <div class="flex items-center gap-4">
+      {#if !isRecording}
+        <button
+          onclick={startRecording}
+          class="w-14 h-14 rounded-full flex items-center justify-center transition-all bg-primary-600 hover:bg-primary-500 text-white glow-primary"
+        >
+          <Mic class="w-6 h-6" />
+        </button>
+      {:else}
+        <button
+          onclick={stopRecording}
+          class="w-14 h-14 rounded-full flex items-center justify-center transition-all bg-error-600 hover:bg-error-500 text-white"
+        >
+          <Square class="w-6 h-6" />
+        </button>
+      {/if}
+    </div>
   </div>
 </div>
 
 <style>
-  .microphone-controls {
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-primary {
-    background: #3b82f6;
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #2563eb;
-  }
-
-  .btn-danger {
-    background: #ef4444;
-    color: white;
-  }
-
-  .btn-danger:hover {
-    background: #dc2626;
-  }
-
-  .btn-secondary {
-    background: #e5e7eb;
-    color: #374151;
-  }
-
-  .btn-secondary:hover {
-    background: #d1d5db;
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
   }
 </style>
